@@ -176,7 +176,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
             int numberOfHops = (int)(newLength / _bufferSize);
             Node current = _head;
 
-            int i = 0;//1; // Starting at 1 instead of 0, because of 'current' is set to the value of '_head', which counts as hop.
+            int i = 0;
             while (i < numberOfHops && current != null)
             {
                 current = current.Next;
@@ -199,11 +199,6 @@ namespace com.marcuslc.BlockBasedMemoryStream
             }
 
             current.Next = null;
-
-            //if(current.Value.end >= _bufferSize)
-            //{
-            //    current.Next = null;
-            //}
         }
     }
 }
