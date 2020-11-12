@@ -42,7 +42,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
 
         public override void Flush()
         {
-            throw new NotImplementedException();
+            return;
         }
 
         public override int Read(byte[] buffer, int offset, int count)
@@ -62,15 +62,29 @@ namespace com.marcuslc.BlockBasedMemoryStream
                     while (i < numberOfHops && current != null)
                     {
                         ValueHolder value = current.Value;
-                        int bytesToCopy = (value.end - value.start);
-                        if(bytesToCopy > count)
+                        int bytesToCopyThisRound = (value.end - value.start);
+                        int bytesLeftToCopy = (count - currentIndex);
+
+                        if (bytesToCopyThisRound > bytesLeftToCopy)
                         {
-                            bytesToCopy = count;
+                            bytesToCopyThisRound = bytesLeftToCopy;
                         }
 
-                        Buffer.MemoryCopy((byte*)value.pointer + value.start, destPtr + currentIndex, count, bytesToCopy);
+                        Buffer.MemoryCopy((byte*)value.pointer + value.start, destPtr + currentIndex, count, bytesToCopyThisRound);
 
-                        currentIndex += bytesToCopy;
+                        current.Value.start += bytesToCopyThisRound;
+
+                        if (current.Value.start >= current.Value.end)
+                        {
+                            _head = current.Next;
+
+                            if(_head == null)
+                            {
+                                this.Clear();
+                            }
+                        }
+
+                        currentIndex += bytesToCopyThisRound;
                         current = current.Next;
                         ++i;
                     }
