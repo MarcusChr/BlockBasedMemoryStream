@@ -78,7 +78,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
                         {
                             _head = current.Next;
 
-                            if(_head == null)
+                            if (_head == null)
                             {
                                 this.Clear();
                             }
@@ -101,7 +101,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
 
         public override void SetLength(long value)
         {
-            throw new NotImplementedException();
+            _setLength(value);
         }
 
         public override void Write(byte[] buffer, int offset, int count)
@@ -169,6 +169,41 @@ namespace com.marcuslc.BlockBasedMemoryStream
             }
 
             return counter;
+        }
+
+        private void _setLength(long newLength)
+        {
+            int numberOfHops = (int)(newLength / _bufferSize);
+            Node current = _head;
+
+            int i = 0;//1; // Starting at 1 instead of 0, because of 'current' is set to the value of '_head', which counts as hop.
+            while (i < numberOfHops && current != null)
+            {
+                current = current.Next;
+
+                if (current == null)
+                {
+                    throw new ArgumentException("The new length was above the current length, which is unsupported.");
+                }
+
+                ++i;
+            }
+
+
+            current.Value.end = (int)(newLength % _bufferSize);
+            ValueHolder value = current.Value;
+
+            if (value.start > value.end)
+            {
+                current.Value.start = value.end;
+            }
+
+            current.Next = null;
+
+            //if(current.Value.end >= _bufferSize)
+            //{
+            //    current.Next = null;
+            //}
         }
     }
 }
