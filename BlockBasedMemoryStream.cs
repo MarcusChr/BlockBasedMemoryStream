@@ -18,7 +18,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
 
         public BlockBasedMemoryStream()
         {
-            _init(short.MaxValue);
+            _init(ushort.MaxValue);
         }
 
         public BlockBasedMemoryStream(int bufferSize)
@@ -47,8 +47,37 @@ namespace com.marcuslc.BlockBasedMemoryStream
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            int numberOfHops = count / _bufferSize;
-            return 0;
+            if (count > (buffer.Length - offset)) throw new ArgumentOutOfRangeException($"{nameof(count)} was bigger than ({nameof(buffer)}.Length - {nameof(offset)})");
+            if (offset > buffer.Length) throw new ArgumentOutOfRangeException("Offset was bigger than buffer");
+
+            int numberOfHops = (count / _bufferSize) + 1;
+
+            int currentIndex = 0;
+            Node current = _head;
+            unsafe
+            {
+                fixed (byte* destPtr = &buffer[offset])
+                {
+                    int i = 0;
+                    while (i < numberOfHops && current != null)
+                    {
+                        ValueHolder value = current.Value;
+                        int bytesToCopy = (value.end - value.start);
+                        if(bytesToCopy > count)
+                        {
+                            bytesToCopy = count;
+                        }
+
+                        Buffer.MemoryCopy((byte*)value.pointer + value.start, destPtr + currentIndex, count, bytesToCopy);
+
+                        currentIndex += bytesToCopy;
+                        current = current.Next;
+                        ++i;
+                    }
+                }
+            }
+
+            return currentIndex;
         }
 
         public override long Seek(long offset, SeekOrigin origin)
@@ -92,6 +121,11 @@ namespace com.marcuslc.BlockBasedMemoryStream
             }
         }
 
+        public void Clear()
+        {
+            _init(_bufferSize);
+        }
+
         private Node _addNodeToTail()
         {
             Node nodeToAdd = new Node(_bufferSize);
@@ -111,7 +145,16 @@ namespace com.marcuslc.BlockBasedMemoryStream
 
         private long _getLength()
         {
-            return 0;
+            Node current = _head;
+            long counter = 0;
+
+            while (current != null)
+            {
+                counter += (current.Value.end - current.Value.start);
+                current = current.Next;
+            }
+
+            return counter;
         }
     }
 }
