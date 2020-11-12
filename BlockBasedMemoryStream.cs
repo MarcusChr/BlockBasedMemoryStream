@@ -183,7 +183,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
 
                 if (current == null)
                 {
-                    throw new ArgumentException("The new length was above the current length, which is unsupported.");
+                    throw new ArgumentException("The new length is greater the current length, which is unsupported.");
                 }
 
                 ++i;
@@ -199,6 +199,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
             }
 
             current.Next = null;
+            _tail = current;
         }
     }
 }
