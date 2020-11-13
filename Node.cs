@@ -21,6 +21,11 @@ namespace com.marcuslc.BlockBasedMemoryStream
 
         public Node Next;
         public ValueHolder Value;
+
+        ~Node()
+        {
+            Marshal.FreeHGlobal(new IntPtr(Value.pointer));
+        }
     }
 
     public unsafe struct ValueHolder

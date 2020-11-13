@@ -9,7 +9,7 @@ using System.Text;
 
 namespace com.marcuslc.BlockBasedMemoryStream
 {
-    public class BlockBasedMemoryStream : Stream
+    public class BlockBasedMemoryStream : Stream, IDisposable
     {
         private Node _head;
         private Node _tail;
