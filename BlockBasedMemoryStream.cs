@@ -16,6 +16,11 @@ namespace com.marcuslc.BlockBasedMemoryStream
 
         private int _bufferSize;
 
+        public int BufferSize
+        {
+            get => _bufferSize;
+        }
+
         public BlockBasedMemoryStream()
         {
             _init(ushort.MaxValue);
