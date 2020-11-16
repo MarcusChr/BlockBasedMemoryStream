@@ -206,6 +206,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
         private void _setLength(long newLength)
         {
             int numberOfHops = (int)(newLength / _bufferSize);
+            int newEndPos = (int)(newLength % _bufferSize);
             Node current = _head;
 
             int i = 0;
@@ -213,7 +214,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
             {
                 current = current.Next;
 
-                if (current == null)
+                if (current == null|| current.Value.end < newEndPos)
                 {
                     throw new ArgumentException("The new length is greater the current length, which is unsupported.");
                 }
@@ -222,7 +223,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
             }
 
 
-            current.Value.end = (int)(newLength % _bufferSize);
+            current.Value.end = newEndPos;
             ValueHolder value = current.Value;
 
             if (value.start > value.end)
