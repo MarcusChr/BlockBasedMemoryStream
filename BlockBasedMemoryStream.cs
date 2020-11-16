@@ -116,6 +116,11 @@ namespace com.marcuslc.BlockBasedMemoryStream
             return buffer;
         }
 
+        public void Skip(int numberOfBytes)
+        {
+            this.Read(new byte[numberOfBytes], 0, numberOfBytes); //This might be a temporary solution - who knows?
+        }
+
         private int _read(byte[] buffer, int offset, int count, bool removeReadData = true)
         {
             if (count > (buffer.Length - offset)) throw new ArgumentOutOfRangeException($"{nameof(count)} was bigger than ({nameof(buffer)}.Length - {nameof(offset)})");
