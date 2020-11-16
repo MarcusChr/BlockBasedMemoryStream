@@ -106,8 +106,13 @@ namespace com.marcuslc.BlockBasedMemoryStream
 
         public byte[] ToArray()
         {
+            return this.ToArray(false);
+        }
+
+        public byte[] ToArray(bool removeReadData = false)
+        {
             byte[] buffer = new byte[this.Length];
-            _read(buffer, 0, buffer.Length, removeReadData: false);
+            _read(buffer, 0, buffer.Length, removeReadData: removeReadData);
             return buffer;
         }
 
