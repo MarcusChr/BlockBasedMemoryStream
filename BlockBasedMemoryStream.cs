@@ -55,7 +55,48 @@ namespace com.marcuslc.BlockBasedMemoryStream
             if (count > (buffer.Length - offset)) throw new ArgumentOutOfRangeException($"{nameof(count)} was bigger than ({nameof(buffer)}.Length - {nameof(offset)})");
             if (offset > buffer.Length) throw new ArgumentOutOfRangeException("Offset was bigger than buffer");
 
-            return _read(buffer, offset, count, removeReadData: true);
+            int numberOfHops = (count / _bufferSize) + 1;
+
+            int currentIndex = 0;
+            Node current = _head;
+            unsafe
+            {
+                fixed (byte* destPtr = &buffer[offset])
+                {
+                    int i = 0;
+                    while (i < numberOfHops && current != null)
+                    {
+                        ValueHolder value = current.Value;
+                        int bytesToCopyThisRound = (value.end - value.start);
+                        int bytesLeftToCopy = (count - currentIndex);
+
+                        if (bytesToCopyThisRound > bytesLeftToCopy)
+                        {
+                            bytesToCopyThisRound = bytesLeftToCopy;
+                        }
+
+                        Buffer.MemoryCopy((byte*)value.pointer + value.start, destPtr + currentIndex, count, bytesToCopyThisRound);
+
+                        current.Value.start += bytesToCopyThisRound;
+
+                        if (current.Value.start >= current.Value.end)
+                        {
+                            _head = current.Next;
+
+                            if (_head == null)
+                            {
+                                this.Clear();
+                            }
+                        }
+
+                        currentIndex += bytesToCopyThisRound;
+                        current = current.Next;
+                        ++i;
+                    }
+                }
+            }
+
+            return currentIndex;
         }
 
         public override long Seek(long offset, SeekOrigin origin)
@@ -102,64 +143,6 @@ namespace com.marcuslc.BlockBasedMemoryStream
         public void Clear()
         {
             _init(_bufferSize);
-        }
-
-        public byte[] ToArray()
-        {
-            byte[] buffer = new byte[this.Length];
-            _read(buffer, 0, buffer.Length, removeReadData: false);
-            return buffer;
-        }
-
-        private int _read(byte[] buffer, int offset, int count, bool removeReadData = true)
-        {
-            if (count > (buffer.Length - offset)) throw new ArgumentOutOfRangeException($"{nameof(count)} was bigger than ({nameof(buffer)}.Length - {nameof(offset)})");
-            if (offset > buffer.Length) throw new ArgumentOutOfRangeException("Offset was bigger than buffer");
-            if (count == 0 || buffer.Length == 0) return 0;
-
-            int numberOfHops = (count / _bufferSize) + 1;
-
-            int currentIndex = 0;
-            Node current = _head;
-            unsafe
-            {
-                fixed (byte* destPtr = &buffer[offset])
-                {
-                    int i = 0;
-                    while (i < numberOfHops && current != null)
-                    {
-                        ValueHolder value = current.Value;
-                        int bytesToCopyThisRound = (value.end - value.start);
-                        int bytesLeftToCopy = (count - currentIndex);
-
-                        if (bytesToCopyThisRound > bytesLeftToCopy)
-                        {
-                            bytesToCopyThisRound = bytesLeftToCopy;
-                        }
-
-                        Buffer.MemoryCopy((byte*)value.pointer + value.start, destPtr + currentIndex, count, bytesToCopyThisRound);
-                        if (removeReadData)
-                        {
-                            current.Value.start += bytesToCopyThisRound;
-
-                            if (current.Value.start >= current.Value.end)
-                            {
-                                _head = current.Next;
-
-                                if (_head == null)
-                                {
-                                    this.Clear();
-                                }
-                            }
-                        }
-                        currentIndex += bytesToCopyThisRound;
-                        current = current.Next;
-                        ++i;
-                    }
-                }
-            }
-
-            return currentIndex;
         }
 
         private Node _addNodeToTail()
