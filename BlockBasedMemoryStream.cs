@@ -127,8 +127,6 @@ namespace com.marcuslc.BlockBasedMemoryStream
             if (offset > buffer.Length) throw new ArgumentOutOfRangeException("Offset was bigger than buffer");
             if (count == 0 || buffer.Length == 0) return 0;
 
-            int numberOfHops = (count / _bufferSize) + 1;
-
             int currentIndex = 0;
             Node current = _head;
             unsafe
@@ -136,7 +134,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
                 fixed (byte* destPtr = &buffer[offset])
                 {
                     int i = 0;
-                    while (i < numberOfHops && current != null)
+                    while(currentIndex <= count && current != null)
                     {
                         ValueHolder value = current.Value;
                         int bytesToCopyThisRound = (value.end - value.start);
