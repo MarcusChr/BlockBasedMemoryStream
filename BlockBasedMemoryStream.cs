@@ -87,7 +87,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
                 {
                     fixed (void* sourcePtr = &buffer[offset + bytesWritten])
                     {
-                        int valuePointerOffset = _tail.Value.start;
+                        int valuePointerOffset = _tail.Value.end;//_tail.Value.start;
                         Buffer.MemoryCopy(sourcePtr, (byte*)_tail.Value.pointer + valuePointerOffset, _bufferSize, bytesToWriteThisRound);
                         bytesLeftToWrite -= bytesToWriteThisRound;
                         _tail.Value.end += bytesToWriteThisRound;
@@ -208,6 +208,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
             int numberOfHops = (int)(newLength / _bufferSize);
             int newEndPos = (int)(newLength % _bufferSize);
             Node current = _head;
+            ArgumentException exceptionToThrow = new ArgumentException("The new length is greater the current length, which is unsupported.");
 
             int i = 0;
             while (i < numberOfHops && current != null)
@@ -216,12 +217,15 @@ namespace com.marcuslc.BlockBasedMemoryStream
 
                 if (current == null|| current.Value.end < newEndPos)
                 {
-                    throw new ArgumentException("The new length is greater the current length, which is unsupported.");
+                    throw exceptionToThrow;
                 }
 
                 ++i;
             }
-
+            if(newEndPos > current.Value.end)
+            {
+                throw exceptionToThrow;
+            }
 
             current.Value.end = newEndPos;
             ValueHolder value = current.Value;
