@@ -215,7 +215,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
             {
                 current = current.Next;
 
-                if (current == null|| current.Value.end < newEndPos)
+                if (current == null)
                 {
                     throw exceptionToThrow;
                 }
