@@ -15,6 +15,8 @@ namespace com.marcuslc.BlockBasedMemoryStream
         private Node _tail;
 
         private int _bufferSize;
+        private bool _useLengthCaching;
+        private long _cachedLength;
 
         /// <summary>
         /// Returns the set Buffer size.
@@ -24,23 +26,28 @@ namespace com.marcuslc.BlockBasedMemoryStream
             get => _bufferSize;
         }
 
+        public bool UseLengthCaching
+        {
+            get => _useLengthCaching;
+            set => _useLengthCaching = value;
+        }
         /// <summary>
         /// Creates a memory stream based on a linked list with fixed size buffers.
         /// <para/>
         /// The default buffer-size is 65535 bytes (2^16 - 1).
         /// </summary>
-        public BlockBasedMemoryStream()
+        public BlockBasedMemoryStream(bool useLengthCaching = true)
         {
-            _init(ushort.MaxValue);
+            _init(ushort.MaxValue, useLengthCaching);
         }
 
         /// <summary>
         /// Creates a memory stream based on a linked list with custom fixed size buffers.
         /// </summary>
         /// <param name="bufferSize">Custom size of the buffers. The bigger the buffer-size is, the faster it is to add, although more memory will be wasted.</param>
-        public BlockBasedMemoryStream(int bufferSize)
+        public BlockBasedMemoryStream(int bufferSize, bool useLengthCaching = true)
         {
-            _init(bufferSize);
+            _init(bufferSize, useLengthCaching);
         }
 
         public override bool CanRead => true;
@@ -138,6 +145,8 @@ namespace com.marcuslc.BlockBasedMemoryStream
 
                 if (newNodeNeeded) _addNodeToTail();
             }
+
+            _cachedLength += count;
         }
 
         /// <summary>
@@ -223,7 +232,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
                     }
                 }
             }
-
+            if(removeReadData) _cachedLength -= currentIndex;
             return currentIndex;
         }
 
@@ -236,25 +245,32 @@ namespace com.marcuslc.BlockBasedMemoryStream
             return nodeToAdd;
         }
 
-        private void _init(int bufferSize)
+        private void _init(int bufferSize, bool useLengthCaching = true)
         {
             _bufferSize = bufferSize;
             Node nodeToAdd = new Node(_bufferSize);
             _tail = nodeToAdd;
             _head = nodeToAdd;
+            _useLengthCaching = useLengthCaching;
+            _cachedLength = 0;
         }
 
         private long _getLength()
         {
-            Node current = _head;
             long counter = 0;
-
-            while (current != null)
+            if (!_useLengthCaching)
             {
-                counter += (current.Value.end - current.Value.start);
-                current = current.Next;
+                Node current = _head;
+                while (current != null)
+                {
+                    counter += (current.Value.end - current.Value.start);
+                    current = current.Next;
+                }
             }
-
+            else
+            {
+                counter = _cachedLength;
+            }
             return counter;
         }
 
@@ -292,6 +308,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
 
             current.Next = null;
             _tail = current;
+            _cachedLength = newLength;
         }
     }
 }
