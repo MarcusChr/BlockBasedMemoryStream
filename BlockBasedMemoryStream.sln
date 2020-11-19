@@ -7,10 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlockBasedMemoryStream", "B
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tester", "..\Tester\Tester.csproj", "{8FDD7065-CF6B-4AC0-AD91-526D70EB4C28}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlockBasedMemoryStreamConsole", "..\BlockBasedMemoryStreamConsole\BlockBasedMemoryStreamConsole.csproj", "{9919BACF-E7C0-452E-8B44-A91FEC9C5D00}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartMemoryStream", "..\SmartMemoryStream\SmartMemoryStream.csproj", "{4958CE49-215B-46B0-880A-7059CFE95329}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,14 +21,6 @@ Global
 		{8FDD7065-CF6B-4AC0-AD91-526D70EB4C28}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8FDD7065-CF6B-4AC0-AD91-526D70EB4C28}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8FDD7065-CF6B-4AC0-AD91-526D70EB4C28}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9919BACF-E7C0-452E-8B44-A91FEC9C5D00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9919BACF-E7C0-452E-8B44-A91FEC9C5D00}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9919BACF-E7C0-452E-8B44-A91FEC9C5D00}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9919BACF-E7C0-452E-8B44-A91FEC9C5D00}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4958CE49-215B-46B0-880A-7059CFE95329}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4958CE49-215B-46B0-880A-7059CFE95329}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4958CE49-215B-46B0-880A-7059CFE95329}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4958CE49-215B-46B0-880A-7059CFE95329}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
