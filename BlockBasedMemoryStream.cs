@@ -26,6 +26,9 @@ namespace com.marcuslc.BlockBasedMemoryStream
             get => _bufferSize;
         }
 
+        /// <summary>
+        /// Gets or set whether or to use length-caching. Turn it off to be absolutely sure of always getting the correct length, but at the cost of performance.
+        /// </summary>
         public bool UseLengthCaching
         {
             get => _useLengthCaching;
@@ -232,7 +235,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
                     }
                 }
             }
-            if(removeReadData) _cachedLength -= currentIndex;
+            if (removeReadData) _cachedLength -= currentIndex;
             return currentIndex;
         }
 
@@ -271,6 +274,8 @@ namespace com.marcuslc.BlockBasedMemoryStream
             {
                 counter = _cachedLength;
             }
+
+            _cachedLength = counter;
             return counter;
         }
 
