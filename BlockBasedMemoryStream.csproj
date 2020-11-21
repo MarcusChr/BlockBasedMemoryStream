@@ -9,7 +9,7 @@
     <Description>High-speed FIFO Memory Stream based on fixed-sized memory blocks linked together.</Description>
     <Copyright>Marcus Christensen</Copyright>
     <Authors>Marcus Christensen</Authors>
-    <PackageLicenseExpression>MIT License</PackageLicenseExpression>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageId>BlockBasedMemoryStream</PackageId>
   </PropertyGroup>
 
