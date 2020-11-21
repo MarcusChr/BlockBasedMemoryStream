@@ -9,7 +9,7 @@ using System.Text;
 
 namespace com.marcuslc.BlockBasedMemoryStream
 {
-    public class BlockBasedMemoryStream : Stream, IDisposable
+    public class BlockBasedMemoryStream : Stream
     {
         private Node _head;
         private Node _tail;
@@ -104,6 +104,17 @@ namespace com.marcuslc.BlockBasedMemoryStream
             throw new NotSupportedException();
         }
 
+        public override void CopyTo(Stream destination, int bufferSize)
+        {
+            byte[] buffer = new byte[bufferSize];
+            int bytesRead = 0;
+            do
+            {
+                bytesRead = this.Read(buffer, 0, buffer.Length);
+                destination.Write(buffer, 0, bytesRead);
+            } while (bytesRead > 0);
+        }
+
         /// <summary>
         /// Sets the length of the stream. The new length cannot be greater than the current length of the Stream.
         /// </summary>
@@ -158,6 +169,14 @@ namespace com.marcuslc.BlockBasedMemoryStream
         public void Clear()
         {
             _init(_bufferSize);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            this.Clear();
+            _head = null;
+            _tail = null;
+            UseLengthCaching = false;
         }
 
         /// <summary>
