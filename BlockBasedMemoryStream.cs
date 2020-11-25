@@ -168,7 +168,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
         /// </summary>
         public void Clear()
         {
-            _init(_bufferSize);
+            _init(_bufferSize, _useLengthCaching);
         }
 
         protected override void Dispose(bool disposing)
