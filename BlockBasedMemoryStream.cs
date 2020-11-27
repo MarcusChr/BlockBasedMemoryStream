@@ -14,6 +14,9 @@ namespace com.marcuslc.BlockBasedMemoryStream
         private Node _head;
         private Node _tail;
 
+        private Node[] _pool;
+        private int _currentPoolPos;
+
         private int _blockSize;
         private bool _useLengthCaching;
         private long _cachedLength;
