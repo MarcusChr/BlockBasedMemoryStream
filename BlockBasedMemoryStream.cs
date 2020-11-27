@@ -14,16 +14,26 @@ namespace com.marcuslc.BlockBasedMemoryStream
         private Node _head;
         private Node _tail;
 
-        private int _bufferSize;
+        private int _blockSize;
         private bool _useLengthCaching;
         private long _cachedLength;
 
         /// <summary>
-        /// Returns the set Buffer size.
+        /// Please use BlockBasedMemoryStream.BlockSize instead.
+        /// <para/>Returns the set Buffer size.
         /// </summary>
+        [ObsoleteAttribute("BlockBasedMemoryStream.BufferSize is being phased out due to confusing naming - please use BlockBasedMemoryStream.BlockSize instead.", false)]
         public int BufferSize
         {
-            get => _bufferSize;
+            get => _blockSize;
+        }
+
+        /// <summary>
+        /// Returns the set Buffer size.
+        /// </summary>
+        public int BlockSize
+        {
+            get => _blockSize;
         }
 
         /// <summary>
@@ -48,9 +58,9 @@ namespace com.marcuslc.BlockBasedMemoryStream
         /// Creates a memory stream based on a linked list with custom fixed size buffers.
         /// </summary>
         /// <param name="bufferSize">Custom size of the buffers. The bigger the buffer-size is, the faster it is to add, although more memory will be wasted.</param>
-        public BlockBasedMemoryStream(int bufferSize, bool useLengthCaching = true)
+        public BlockBasedMemoryStream(int blockSize, bool useLengthCaching = true)
         {
-            _init(bufferSize, useLengthCaching);
+            _init(blockSize, useLengthCaching);
         }
 
         public override bool CanRead => true;
@@ -136,7 +146,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
             int bytesLeftToWrite = count;
             while (bytesLeftToWrite > 0)
             {
-                int spaceLeftInTail = (_bufferSize - _tail.Value.end);
+                int spaceLeftInTail = (_blockSize - _tail.Value.end);
                 bool newNodeNeeded = (spaceLeftInTail < bytesLeftToWrite);
                 int bytesToWriteThisRound = bytesLeftToWrite;
 
@@ -150,7 +160,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
                     fixed (void* sourcePtr = &buffer[offset + bytesWritten])
                     {
                         int valuePointerOffset = _tail.Value.end;//_tail.Value.start;
-                        Buffer.MemoryCopy(sourcePtr, (byte*)_tail.Value.pointer + valuePointerOffset, _bufferSize, bytesToWriteThisRound);
+                        Buffer.MemoryCopy(sourcePtr, (byte*)_tail.Value.pointer + valuePointerOffset, _blockSize, bytesToWriteThisRound);
                         bytesLeftToWrite -= bytesToWriteThisRound;
                         _tail.Value.end += bytesToWriteThisRound;
                         bytesWritten += bytesToWriteThisRound;
@@ -168,7 +178,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
         /// </summary>
         public void Clear()
         {
-            _init(_bufferSize, _useLengthCaching);
+            _init(_blockSize, _useLengthCaching);
         }
 
         protected override void Dispose(bool disposing)
@@ -241,11 +251,6 @@ namespace com.marcuslc.BlockBasedMemoryStream
                             if (current.Value.start >= current.Value.end)
                             {
                                 _head = current.Next;
-
-                                if (_head == null)
-                                {
-                                    this.Clear();
-                                }
                             }
                         }
                         currentIndex += bytesToCopyThisRound;
@@ -254,23 +259,33 @@ namespace com.marcuslc.BlockBasedMemoryStream
                     }
                 }
             }
-            if (removeReadData) _cachedLength -= currentIndex;
+            if (removeReadData)
+            {
+                if (_head == null)
+                {
+                    this.Clear();
+                }
+                else
+                {
+                    _cachedLength -= currentIndex;
+                }
+            }
             return currentIndex;
         }
 
         private Node _addNodeToTail()
         {
-            Node nodeToAdd = new Node(_bufferSize);
+            Node nodeToAdd = new Node(_blockSize);
             _tail.Next = nodeToAdd;
             _tail = nodeToAdd;
 
             return nodeToAdd;
         }
 
-        private void _init(int bufferSize, bool useLengthCaching = true)
+        private void _init(int blockSize, bool useLengthCaching = true)
         {
-            _bufferSize = bufferSize;
-            Node nodeToAdd = new Node(_bufferSize);
+            _blockSize = blockSize;
+            Node nodeToAdd = new Node(_blockSize);
             _tail = nodeToAdd;
             _head = nodeToAdd;
             _useLengthCaching = useLengthCaching;
@@ -300,8 +315,8 @@ namespace com.marcuslc.BlockBasedMemoryStream
 
         private void _setLength(long newLength)
         {
-            int numberOfHops = (int)(newLength / _bufferSize);
-            int newEndPos = (int)(newLength % _bufferSize);
+            int numberOfHops = (int)(newLength / _blockSize);
+            int newEndPos = (int)(newLength % _blockSize);
             Node current = _head;
             ArgumentException exceptionToThrow = new ArgumentException("The new length is greater the current length, which is unsupported.");
 
