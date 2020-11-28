@@ -52,18 +52,18 @@ namespace com.marcuslc.BlockBasedMemoryStream
         /// <para/>
         /// The default buffer-size is 65535 bytes (2^16 - 1).
         /// </summary>
-        public BlockBasedMemoryStream(bool useLengthCaching = true)
+        public BlockBasedMemoryStream(bool useLengthCaching = true, int poolSize = 100)
         {
-            _init(ushort.MaxValue, useLengthCaching);
+            _init(ushort.MaxValue, useLengthCaching, poolSize);
         }
 
         /// <summary>
         /// Creates a memory stream based on a linked list with custom fixed size buffers.
         /// </summary>
         /// <param name="bufferSize">Custom size of the buffers. The bigger the buffer-size is, the faster it is to add, although more memory will be wasted.</param>
-        public BlockBasedMemoryStream(int blockSize, bool useLengthCaching = true)
+        public BlockBasedMemoryStream(int blockSize, bool useLengthCaching = true, int poolSize = 100)
         {
-            _init(blockSize, useLengthCaching);
+            _init(blockSize, useLengthCaching, poolSize);
         }
 
         public override bool CanRead => true;
@@ -181,7 +181,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
         /// </summary>
         public void Clear()
         {
-            _init(_blockSize, _useLengthCaching);
+            _init(_blockSize, _useLengthCaching, _pool.Length);
         }
 
         protected override void Dispose(bool disposing)
@@ -253,7 +253,8 @@ namespace com.marcuslc.BlockBasedMemoryStream
 
                             if (current.Value.start >= current.Value.end)
                             {
-                                _head = current.Next;
+                                _setNewHead(current.Next);
+                                //_head = current.Next;
                             }
                         }
                         currentIndex += bytesToCopyThisRound;
@@ -276,23 +277,47 @@ namespace com.marcuslc.BlockBasedMemoryStream
             return currentIndex;
         }
 
+        private void _setNewHead(Node newHead)
+        {
+            if (_pool.Length > _currentPoolPos)
+            {
+                Node oldHead = _head;
+                oldHead.Value.start = 0;
+                oldHead.Value.end = 0;
+                _pool[_currentPoolPos++] = oldHead;
+            }
+            _head = newHead;
+        }
+
         private Node _addNodeToTail()
         {
-            Node nodeToAdd = new Node(_blockSize);
+            Node nodeToAdd;
+            if (_currentPoolPos > 0)
+            {
+                nodeToAdd = _pool[_currentPoolPos--];
+            }
+            else
+            {
+                nodeToAdd = new Node(_blockSize);
+            }
             _tail.Next = nodeToAdd;
             _tail = nodeToAdd;
 
             return nodeToAdd;
         }
 
-        private void _init(int blockSize, bool useLengthCaching = true)
+        private void _init(int blockSize, bool useLengthCaching, int poolSize)
         {
             _blockSize = blockSize;
             Node nodeToAdd = new Node(_blockSize);
             _tail = nodeToAdd;
             _head = nodeToAdd;
+
             _useLengthCaching = useLengthCaching;
             _cachedLength = 0;
+
+            _pool = new Node[poolSize];
+            _currentPoolPos = 0;
         }
 
         private long _getLength()
