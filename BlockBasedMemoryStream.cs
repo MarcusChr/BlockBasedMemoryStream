@@ -47,12 +47,26 @@ namespace com.marcuslc.BlockBasedMemoryStream
             get => _useLengthCaching;
             set => _useLengthCaching = value;
         }
+
+        /// <summary>
+        /// Gets or sets the size of the block pool. Once a block is released, it will either be placed into the pool, for it be reused, or it will be released. 
+        /// Set the PoolSize to 0 to turn this feature off.
+        /// Reusing blocks can be beneficial if You read and write huge amounts of data, however it will come at the cost of added memory consumption (BlockSize * PoolSize)
+        /// </summary>
+        public int PoolSize
+        {
+            get => _pool.Length;
+            set => _setPoolSize(value);
+        }
+
         /// <summary>
         /// Creates a memory stream based on a linked list with fixed size buffers.
         /// <para/>
         /// The default buffer-size is 65535 bytes (2^16 - 1).
         /// </summary>
-        public BlockBasedMemoryStream(bool useLengthCaching = true, int poolSize = 100)
+        /// <param name="useLengthCaching"></param>
+        /// <param name="poolSize"></param>
+        public BlockBasedMemoryStream(bool useLengthCaching = true, int poolSize = 0)
         {
             _init(ushort.MaxValue, useLengthCaching, poolSize);
         }
@@ -61,7 +75,9 @@ namespace com.marcuslc.BlockBasedMemoryStream
         /// Creates a memory stream based on a linked list with custom fixed size buffers.
         /// </summary>
         /// <param name="bufferSize">Custom size of the buffers. The bigger the buffer-size is, the faster it is to add, although more memory will be wasted.</param>
-        public BlockBasedMemoryStream(int blockSize, bool useLengthCaching = true, int poolSize = 100)
+        /// <param name="useLengthCaching"></param>
+        /// <param name="poolSize"></param>
+        public BlockBasedMemoryStream(int blockSize, bool useLengthCaching = true, int poolSize = 0)
         {
             _init(blockSize, useLengthCaching, poolSize);
         }
@@ -162,7 +178,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
                 {
                     fixed (void* sourcePtr = &buffer[offset + bytesWritten])
                     {
-                        int valuePointerOffset = _tail.Value.end;//_tail.Value.start;
+                        int valuePointerOffset = _tail.Value.end;
                         Buffer.MemoryCopy(sourcePtr, (byte*)_tail.Value.pointer + valuePointerOffset, _blockSize, bytesToWriteThisRound);
                         bytesLeftToWrite -= bytesToWriteThisRound;
                         _tail.Value.end += bytesToWriteThisRound;
@@ -254,7 +270,6 @@ namespace com.marcuslc.BlockBasedMemoryStream
                             if (current.Value.start >= current.Value.end)
                             {
                                 _setNewHead(current.Next);
-                                //_head = current.Next;
                             }
                         }
                         currentIndex += bytesToCopyThisRound;
@@ -284,7 +299,12 @@ namespace com.marcuslc.BlockBasedMemoryStream
                 Node oldHead = _head;
                 oldHead.Value.start = 0;
                 oldHead.Value.end = 0;
-                _pool[_currentPoolPos++] = oldHead;
+                _pool[_currentPoolPos] = oldHead;
+
+                if(_pool.Length > _currentPoolPos + 1)
+                {
+                    _currentPoolPos++;
+                }
             }
             _head = newHead;
         }
@@ -294,7 +314,9 @@ namespace com.marcuslc.BlockBasedMemoryStream
             Node nodeToAdd;
             if (_currentPoolPos > 0)
             {
-                nodeToAdd = _pool[_currentPoolPos--];
+                nodeToAdd = _pool[_currentPoolPos];
+                _pool[_currentPoolPos] = null;
+                --_currentPoolPos;
             }
             else
             {
@@ -376,6 +398,11 @@ namespace com.marcuslc.BlockBasedMemoryStream
             current.Next = null;
             _tail = current;
             _cachedLength = newLength;
+        }
+
+        private void _setPoolSize(int newSize)
+        {
+
         }
     }
 }
