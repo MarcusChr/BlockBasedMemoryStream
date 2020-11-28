@@ -294,17 +294,12 @@ namespace com.marcuslc.BlockBasedMemoryStream
 
         private void _setNewHead(Node newHead)
         {
-            if (_pool.Length > _currentPoolPos)
+            if (_pool.Length > _currentPoolPos + 1)
             {
                 Node oldHead = _head;
                 oldHead.Value.start = 0;
                 oldHead.Value.end = 0;
-                _pool[_currentPoolPos] = oldHead;
-
-                if(_pool.Length > _currentPoolPos + 1)
-                {
-                    _currentPoolPos++;
-                }
+                _pool[++_currentPoolPos] = oldHead;
             }
             _head = newHead;
         }
@@ -339,7 +334,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
             _cachedLength = 0;
 
             _pool = new Node[poolSize];
-            _currentPoolPos = 0;
+            _currentPoolPos = -1;
         }
 
         private long _getLength()
