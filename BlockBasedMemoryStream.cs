@@ -235,7 +235,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
                 fixed (byte* destPtr = &buffer[offset])
                 {
                     int i = 0;
-                    while (currentIndex <= count && current != null)
+                    while (currentIndex < count && current != null)
                     {
                         ValueHolder value = current.Value;
                         int bytesToCopyThisRound = (value.end - value.start);
