@@ -65,8 +65,8 @@ namespace com.marcuslc.BlockBasedMemoryStream
         /// <para/>
         /// The default buffer-size is 65535 bytes (2^16 - 1).
         /// </summary>
-        /// <param name="useLengthCaching"></param>
-        /// <param name="poolSize"></param>
+        /// <param name="useLengthCaching">Whether or not to use cached length. Using cached length is on by default and is faster.</param>
+        /// <param name="poolSize">The size of the pool of blocks to reuse once once released. Using a higher pool size can increase performance, but at the cost of increased memory consumption.</param>
         public BlockBasedMemoryStream(bool useLengthCaching = true, int poolSize = 0)
         {
             _init(ushort.MaxValue, useLengthCaching, poolSize);
@@ -76,8 +76,8 @@ namespace com.marcuslc.BlockBasedMemoryStream
         /// Creates a memory stream based on a linked list with custom fixed size buffers.
         /// </summary>
         /// <param name="bufferSize">Custom size of the buffers. The bigger the buffer-size is, the faster it is to add, although more memory will be wasted.</param>
-        /// <param name="useLengthCaching"></param>
-        /// <param name="poolSize"></param>
+        /// <param name="useLengthCaching">Whether or not to use cached length. Using cached length is on by default and is faster.</param>
+        /// <param name="poolSize">The size of the pool of blocks to reuse once once released. Using a higher pool size can increase performance, but at the cost of increased memory consumption.</param>
         public BlockBasedMemoryStream(int blockSize, bool useLengthCaching = true, int poolSize = 0)
         {
             _init(blockSize, useLengthCaching, poolSize);
