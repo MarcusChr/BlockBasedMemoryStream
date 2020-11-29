@@ -51,7 +51,8 @@ namespace com.marcuslc.BlockBasedMemoryStream
         /// <summary>
         /// Gets or sets the size of the block pool. Once a block is released, it will either be placed into the pool, for it be reused, or it will be released. 
         /// Set the PoolSize to 0 to turn this feature off.
-        /// Reusing blocks can be beneficial if You read and write huge amounts of data, however it will come at the cost of added memory consumption (BlockSize * PoolSize)
+        /// Reusing blocks can be beneficial if You read and write huge amounts of data, however it will come at the cost of added memory consumption (BlockSize * PoolSize).
+        /// <para/>Changing the PoolSize once already set is not recommended, as it will require copying the nodes from one array to another.
         /// </summary>
         public int PoolSize
         {
@@ -397,7 +398,20 @@ namespace com.marcuslc.BlockBasedMemoryStream
 
         private void _setPoolSize(int newSize)
         {
+            Node[] newPool = new Node[newSize];
+            int i = 0;
+            while (i < _pool.Length && i < newPool.Length && i <= _currentPoolPos)
+            {
+                newPool[i] = _pool[i];
+                ++i;
+            }
 
+            if (_currentPoolPos > newSize - 1)
+            {
+                _currentPoolPos = newSize - 1;
+            }
+
+            _pool = newPool;
         }
     }
 }
