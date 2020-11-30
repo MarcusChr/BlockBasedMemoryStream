@@ -32,7 +32,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
         }
 
         /// <summary>
-        /// Returns the set Buffer size.
+        /// Returns the set size of the blocks.
         /// </summary>
         public int BlockSize
         {
