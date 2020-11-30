@@ -14,6 +14,9 @@ namespace com.marcuslc.BlockBasedMemoryStream
         private Node _head;
         private Node _tail;
 
+        private Node[] _pool;
+        private int _currentPoolPos;
+
         private int _blockSize;
         private bool _useLengthCaching;
         private long _cachedLength;
@@ -44,23 +47,40 @@ namespace com.marcuslc.BlockBasedMemoryStream
             get => _useLengthCaching;
             set => _useLengthCaching = value;
         }
+
+        /// <summary>
+        /// Gets or sets the size of the block pool. Once a block is released, it will either be placed into the pool, for it be reused, or it will be released. 
+        /// Set the PoolSize to 0 to turn this feature off.
+        /// Reusing blocks can be beneficial if You read and write huge amounts of data, however it will come at the cost of added memory consumption (BlockSize * PoolSize).
+        /// <para/>Changing the PoolSize once already set is not recommended, as it will require copying the nodes from one array to another.
+        /// </summary>
+        public int PoolSize
+        {
+            get => _pool.Length;
+            set => _setPoolSize(value);
+        }
+
         /// <summary>
         /// Creates a memory stream based on a linked list with fixed size buffers.
         /// <para/>
         /// The default buffer-size is 65535 bytes (2^16 - 1).
         /// </summary>
-        public BlockBasedMemoryStream(bool useLengthCaching = true)
+        /// <param name="useLengthCaching">Whether or not to use cached length. Using cached length is on by default and is faster.</param>
+        /// <param name="poolSize">The size of the pool of blocks to reuse once once released. Using a higher pool size can increase performance, but at the cost of increased memory consumption.</param>
+        public BlockBasedMemoryStream(bool useLengthCaching = true, int poolSize = 0)
         {
-            _init(ushort.MaxValue, useLengthCaching);
+            _init(ushort.MaxValue, useLengthCaching, poolSize);
         }
 
         /// <summary>
         /// Creates a memory stream based on a linked list with custom fixed size buffers.
         /// </summary>
         /// <param name="bufferSize">Custom size of the buffers. The bigger the buffer-size is, the faster it is to add, although more memory will be wasted.</param>
-        public BlockBasedMemoryStream(int blockSize, bool useLengthCaching = true)
+        /// <param name="useLengthCaching">Whether or not to use cached length. Using cached length is on by default and is faster.</param>
+        /// <param name="poolSize">The size of the pool of blocks to reuse once once released. Using a higher pool size can increase performance, but at the cost of increased memory consumption.</param>
+        public BlockBasedMemoryStream(int blockSize, bool useLengthCaching = true, int poolSize = 0)
         {
-            _init(blockSize, useLengthCaching);
+            _init(blockSize, useLengthCaching, poolSize);
         }
 
         public override bool CanRead => true;
@@ -159,7 +179,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
                 {
                     fixed (void* sourcePtr = &buffer[offset + bytesWritten])
                     {
-                        int valuePointerOffset = _tail.Value.end;//_tail.Value.start;
+                        int valuePointerOffset = _tail.Value.end;
                         Buffer.MemoryCopy(sourcePtr, (byte*)_tail.Value.pointer + valuePointerOffset, _blockSize, bytesToWriteThisRound);
                         bytesLeftToWrite -= bytesToWriteThisRound;
                         _tail.Value.end += bytesToWriteThisRound;
@@ -178,7 +198,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
         /// </summary>
         public void Clear()
         {
-            _init(_blockSize, _useLengthCaching);
+            _init(_blockSize, _useLengthCaching, _pool.Length);
         }
 
         protected override void Dispose(bool disposing)
@@ -232,7 +252,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
                 fixed (byte* destPtr = &buffer[offset])
                 {
                     int i = 0;
-                    while (currentIndex <= count && current != null)
+                    while (currentIndex < count && current != null)
                     {
                         ValueHolder value = current.Value;
                         int bytesToCopyThisRound = (value.end - value.start);
@@ -250,7 +270,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
 
                             if (current.Value.start >= current.Value.end)
                             {
-                                _head = current.Next;
+                                _setNewHead(current.Next);
                             }
                         }
                         currentIndex += bytesToCopyThisRound;
@@ -273,23 +293,49 @@ namespace com.marcuslc.BlockBasedMemoryStream
             return currentIndex;
         }
 
+        private void _setNewHead(Node newHead)
+        {
+            if (_pool.Length > _currentPoolPos + 1)
+            {
+                Node oldHead = _head;
+                oldHead.Value.start = 0;
+                oldHead.Value.end = 0;
+                _pool[++_currentPoolPos] = oldHead;
+            }
+            _head = newHead;
+        }
+
         private Node _addNodeToTail()
         {
-            Node nodeToAdd = new Node(_blockSize);
+            Node nodeToAdd;
+            if (_currentPoolPos > 0)
+            {
+                nodeToAdd = _pool[_currentPoolPos];
+                _pool[_currentPoolPos] = null;
+                --_currentPoolPos;
+            }
+            else
+            {
+                nodeToAdd = new Node(_blockSize);
+            }
             _tail.Next = nodeToAdd;
             _tail = nodeToAdd;
 
             return nodeToAdd;
         }
 
-        private void _init(int blockSize, bool useLengthCaching = true)
+        private void _init(int blockSize, bool useLengthCaching, int poolSize)
         {
             _blockSize = blockSize;
             Node nodeToAdd = new Node(_blockSize);
             _tail = nodeToAdd;
             _head = nodeToAdd;
+
             _useLengthCaching = useLengthCaching;
             _cachedLength = 0;
+
+            _pool = new Node[poolSize];
+            _currentPoolPos = -1;
         }
 
         private long _getLength()
@@ -348,6 +394,24 @@ namespace com.marcuslc.BlockBasedMemoryStream
             current.Next = null;
             _tail = current;
             _cachedLength = newLength;
+        }
+
+        private void _setPoolSize(int newSize)
+        {
+            Node[] newPool = new Node[newSize];
+            int i = 0;
+            while (i < _pool.Length && i < newPool.Length && i <= _currentPoolPos)
+            {
+                newPool[i] = _pool[i];
+                ++i;
+            }
+
+            if (_currentPoolPos > newSize - 1)
+            {
+                _currentPoolPos = newSize - 1;
+            }
+
+            _pool = newPool;
         }
     }
 }
