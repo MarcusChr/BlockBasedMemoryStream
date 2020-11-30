@@ -1,7 +1,7 @@
 # BlockBasedMemoryStream
-##High-speed FIFO Memory Stream based on fixed-sized memory blocks linked together.
+## High-speed FIFO Memory Stream based on fixed-sized memory blocks linked together.
 
-###**Changelog:**
+### **Changelog:**
 v1.3.0:
 	- Added support for block-pooling, which will reuse blocks with already allocated memory, resulting in increased performance.
     - Fixed bugs.
