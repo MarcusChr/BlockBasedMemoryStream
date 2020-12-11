@@ -2,6 +2,9 @@
 ## High-speed FIFO Memory Stream based on fixed-sized memory blocks linked together.
 
 ### **Changelog:**
+v1.3.1:
+    - Added a way to clear the pool of blocks, useful for when You are done reading from the Stream and want to remove unnecessary memory consumption.
+
 v1.3.0:
 - Added support for block-pooling, which will reuse blocks with already allocated memory, resulting in increased performance.
 - Fixed bugs.
