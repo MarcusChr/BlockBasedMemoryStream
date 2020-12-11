@@ -201,6 +201,18 @@ namespace com.marcuslc.BlockBasedMemoryStream
             _init(_blockSize, _useLengthCaching, _pool.Length);
         }
 
+        /// <summary>
+        /// Clears the pool of reuseable nodes. This method is useful for when You are done reading from the Stream, but want to keep the instance alive. 
+        /// <para/><b>Note:</b> Calling this method will not prevent you from reading/writing in the future, it will just clear the current pool.
+        /// </summary>
+        public void ClearPool()
+        {
+            for (; _currentPoolPos > -1; _currentPoolPos--)
+            {
+                _pool[_currentPoolPos] = null;
+            }
+        }
+
         protected override void Dispose(bool disposing)
         {
             this.Clear();
