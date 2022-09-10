@@ -14,11 +14,10 @@ namespace com.marcuslc.BlockBasedMemoryStream.Tests
         }
 
         [Test]
-        public void Write_numberOfBytes_lengthIsSameAsWritten()
+        public void Write_numberOfBytes_lengthIsSameAsWritten([Values] bool isUsingValueCaching, [Values(0, 8)] int poolSize, [Values(64, ushort.MaxValue * 8)] int numberOfBytesToWrite)
         {
             //Arrange
-            const int numberOfBytesToWrite = 64;
-            var memoryBasedMemoryStream = new BlockBasedMemoryStream(true, 8);
+            var memoryBasedMemoryStream = new BlockBasedMemoryStream(isUsingValueCaching, poolSize);
             byte[] bytesToWrite = new byte[numberOfBytesToWrite];
             _sharedRandom.NextBytes(bytesToWrite);
 
@@ -27,6 +26,23 @@ namespace com.marcuslc.BlockBasedMemoryStream.Tests
 
             //Assert
             Assert.That(memoryBasedMemoryStream.Length, Is.EqualTo(numberOfBytesToWrite));
+        }
+
+        [Test]
+        public void Read_CheckIfReadDataIsTheSameAsTheDataWritten_DataEqualsDataWritten([Values] bool isUsingValueCaching, [Values(0, 8)] int poolSize, [Values(64, ushort.MaxValue * 8)] int numberOfBytesToWrite)
+        {
+            //Arrange
+            var memoryBasedMemoryStream = new BlockBasedMemoryStream(isUsingValueCaching, poolSize);
+            byte[] bytesToWrite = new byte[numberOfBytesToWrite];
+            byte[] bytesRead = new byte[numberOfBytesToWrite];
+            _sharedRandom.NextBytes(bytesToWrite);
+
+            //Act
+            memoryBasedMemoryStream.Write(bytesToWrite, 0, bytesToWrite.Length);
+            memoryBasedMemoryStream.Read(bytesRead);
+
+            //Assert
+            Assert.That(bytesRead, Is.EquivalentTo(bytesToWrite));
         }
     }
 }
