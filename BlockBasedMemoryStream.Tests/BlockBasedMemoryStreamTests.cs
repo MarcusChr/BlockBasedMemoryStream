@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using System;
+using System.IO;
 
 namespace com.marcuslc.BlockBasedMemoryStream.Tests
 {
@@ -107,6 +108,25 @@ namespace com.marcuslc.BlockBasedMemoryStream.Tests
 
             //Assert
             Assert.That(memoryBasedMemoryStream.Length, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void CopyTo_WriteDataThenCopyToNormalMemoryStream_TargetMemoryStreamEqualsWrittenData([Values] bool isUsingValueCaching, [Values(0, 8)] int poolSize, [Values(64, ushort.MaxValue * 8)] int numberOfBytesToWrite)
+        {
+            //Arrange
+            var memoryBasedMemoryStream = new BlockBasedMemoryStream(isUsingValueCaching, poolSize);
+            var targetMemoryStream = new MemoryStream();
+
+            byte[] bytesToWrite = new byte[numberOfBytesToWrite];
+
+            _sharedRandom.NextBytes(bytesToWrite);
+
+            //Act
+            memoryBasedMemoryStream.Write(bytesToWrite, 0, bytesToWrite.Length);
+            memoryBasedMemoryStream.CopyTo(targetMemoryStream);
+
+            //Assert
+            Assert.That(targetMemoryStream.ToArray(), Is.EquivalentTo(bytesToWrite));
         }
     }
 }
