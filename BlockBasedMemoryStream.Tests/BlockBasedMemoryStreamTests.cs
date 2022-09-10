@@ -29,6 +29,38 @@ namespace com.marcuslc.BlockBasedMemoryStream.Tests
         }
 
         [Test]
+        public void Write_WriteBytesMultipleTimes_DataEqualsDataWritten([Values] bool isUsingValueCaching, [Values(0, 8)] int poolSize, [Values(64, ushort.MaxValue * 8)] int numberOfBytesToWrite)
+        {
+            //Arrange
+            var numberOfRuns = 4;
+            var memoryBasedMemoryStream = new BlockBasedMemoryStream(isUsingValueCaching, poolSize);
+
+            byte[][] bytesToWrite = new byte[numberOfRuns][];
+            byte[][] bytesRead = new byte[numberOfRuns][];
+
+            for (var i = 0; i < bytesToWrite.Length; i++)
+            {
+                bytesToWrite[i] = new byte[numberOfBytesToWrite];
+                bytesRead[i] = new byte[numberOfBytesToWrite];
+
+                _sharedRandom.NextBytes(bytesToWrite[i]);
+            }
+
+            //Act
+            for (int i = 0; i < bytesToWrite.Length; i++)
+            {
+                memoryBasedMemoryStream.Write(bytesToWrite[i], 0, bytesToWrite[i].Length);
+                memoryBasedMemoryStream.Read(bytesRead[i]);
+            }
+
+            //Assert
+            for (int i = 0; i < bytesToWrite.Length; i++)
+            {
+                Assert.That(bytesRead[i], Is.EquivalentTo(bytesToWrite[i]));
+            }
+        }
+
+        [Test]
         public void Read_WriteBytes_DataEqualsDataWritten([Values] bool isUsingValueCaching, [Values(0, 8)] int poolSize, [Values(64, ushort.MaxValue * 8)] int numberOfBytesToWrite)
         {
             //Arrange
