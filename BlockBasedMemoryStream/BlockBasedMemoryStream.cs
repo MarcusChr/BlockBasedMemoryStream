@@ -270,17 +270,20 @@ namespace com.marcuslc.BlockBasedMemoryStream
                         }
 
                         Buffer.MemoryCopy((byte*)value.pointer + value.start, destPtr + currentIndex, count, bytesToCopyThisRound);
+
+                        var previousNode = current;
+                        current = current.Next;
+
                         if (removeReadData)
                         {
-                            current.Value.start += bytesToCopyThisRound;
+                            previousNode.Value.start += bytesToCopyThisRound;
 
-                            if (current.Value.start >= current.Value.end)
+                            if (previousNode.Value.start >= previousNode.Value.end)
                             {
-                                _setNewHead(current.Next);
+                                _setNewHead(previousNode.Next);
                             }
                         }
                         currentIndex += bytesToCopyThisRound;
-                        current = current.Next;
                         ++i;
                     }
                 }
@@ -289,7 +292,7 @@ namespace com.marcuslc.BlockBasedMemoryStream
             {
                 if (_head == null)
                 {
-                    this.Clear();
+                    this._resetHeadAndTail();
                 }
                 else
                 {
@@ -301,14 +304,15 @@ namespace com.marcuslc.BlockBasedMemoryStream
 
         private void _setNewHead(Node newHead)
         {
+            Node oldHead = _head;
+            _head = newHead;
             if (_pool.Length > _currentPoolPos + 1)
             {
-                Node oldHead = _head;
                 oldHead.Value.start = 0;
                 oldHead.Value.end = 0;
+                oldHead.Next = null;
                 _pool[++_currentPoolPos] = oldHead;
             }
-            _head = newHead;
         }
 
         private Node _addNodeToTail()
@@ -333,15 +337,22 @@ namespace com.marcuslc.BlockBasedMemoryStream
         private void _init(int blockSize, bool useLengthCaching, int poolSize)
         {
             _blockSize = blockSize;
+
+            _resetHeadAndTail();
+
+            _useLengthCaching = useLengthCaching;
+
+            _pool = new Node[poolSize];
+            _currentPoolPos = -1;
+        }
+
+        private void _resetHeadAndTail()
+        {
             Node nodeToAdd = new Node(_blockSize);
             _tail = nodeToAdd;
             _head = nodeToAdd;
 
-            _useLengthCaching = useLengthCaching;
             _cachedLength = 0;
-
-            _pool = new Node[poolSize];
-            _currentPoolPos = -1;
         }
 
         private long _getLength()

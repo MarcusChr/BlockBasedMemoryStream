@@ -5,10 +5,12 @@ namespace com.marcuslc.BlockBasedMemoryStream
 {
     public unsafe class Node
     {
+        public Node Next;
+        public ValueHolder Value;
+
         public Node(int bufferSize)
         {
             Next = null;
-
             Value = new ValueHolder
             {
                 start = 0,
@@ -17,8 +19,6 @@ namespace com.marcuslc.BlockBasedMemoryStream
             };
         }
 
-        public Node Next;
-        public ValueHolder Value;
 
         ~Node()
         {
