@@ -218,5 +218,23 @@ namespace com.marcuslc.BlockBasedMemoryStream.Tests
             //Assert
             Assert.That(bytesRead, Is.EquivalentTo(bytesToWrite));
         }
+
+        [Test]
+        public void Flush_WriteBytesFlushThenReadBytesAgain_TheReadBytesShouldEqualTheBytesWritten([Values] bool isUsingValueCaching, [Values(0, 8)] int poolSize, [Values(64, ushort.MaxValue * 8)] int numberOfBytesToWrite)
+        {
+            //Arrange
+            var memoryBasedMemoryStream = new BlockBasedMemoryStream(isUsingValueCaching, poolSize);
+            byte[] bytesToWrite = new byte[numberOfBytesToWrite];
+            byte[] bytesRead = new byte[numberOfBytesToWrite];
+            _sharedRandom.NextBytes(bytesToWrite);
+
+            //Act
+            memoryBasedMemoryStream.Write(bytesToWrite, 0, bytesToWrite.Length);
+            memoryBasedMemoryStream.Flush();
+            memoryBasedMemoryStream.Read(bytesRead);
+
+            //Assert
+            Assert.That(bytesRead, Is.EquivalentTo(bytesToWrite));
+        }
     }
 }
