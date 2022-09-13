@@ -12,10 +12,10 @@ jobs:
         id: nbgv
         with:
           setAllVars: true
-      - run: echo "NBGV_SemVer2 $NBGV_SemVer2"
+      - run: echo "NuGetPackageVersion=${{ steps.nbgv.outputs.NuGetPackageVersion }}"
       - name: Publish
         uses: brandedoutcast/publish-nuget@v2
         with:
           PROJECT_FILE_PATH: BlockBasedMemoryStream/BlockBasedMemoryStream.csproj
-          VERSION_STATIC: ${{ env.NuGetPackageVersion }}
+          VERSION_STATIC: ${{ steps.nbgv.outputs.NuGetPackageVersion }}
           NUGET_KEY: ${{secrets.NUGET_API_KEY}}
