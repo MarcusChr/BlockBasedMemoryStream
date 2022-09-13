@@ -6,19 +6,11 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
       - uses: actions/checkout@v3
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v2
-        with:
-          dotnet-version: 3.1.x
       - uses: dotnet/nbgv@master
         id: nbgv
         with:
           setAllVars: true
       - run: echo "NBGV_SemVer2 $NBGV_SemVer2"
-      - name: Restore dependencies
-        run: dotnet restore
-      - name: Build
-        run: dotnet build --no-restore
       - name: Publish
         uses: brandedoutcast/publish-nuget@v2
         with:
