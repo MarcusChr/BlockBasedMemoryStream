@@ -12,10 +12,8 @@ jobs:
         id: nbgv
         with:
           setAllVars: true
-      - run: echo "NuGetPackageVersion=${{ steps.nbgv.outputs.NuGetPackageVersion }}"
-      - name: Publish
-        uses: brandedoutcast/publish-nuget@v2
-        with:
-          PROJECT_FILE_PATH: BlockBasedMemoryStream/BlockBasedMemoryStream.csproj
-          VERSION_STATIC: ${{ steps.nbgv.outputs.NuGetPackageVersion }}
-          NUGET_KEY: ${{secrets.NUGET_API_KEY}}
+      - run: echo "Version=${{ steps.nbgv.outputs.Version }}"
+      - name: Pack
+        run: dotnet pack ./BlockBasedMemoryStream/BlockBasedMemoryStream.csproj -o . -c Release /p:Version=${{ steps.nbgv.outputs.Version }}
+      - name: Push
+        run: dotnet nuget push *.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
