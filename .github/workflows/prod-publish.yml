@@ -1,0 +1,19 @@
+on:
+  push:
+    branches: [ master ]
+jobs:
+  publish:
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dotnet/nbgv@master
+        id: nbgv
+        with:
+          setAllVars: true
+      - run: echo "NBGV_SemVer2 $NBGV_SemVer2"
+      - name: Publish
+        uses: brandedoutcast/publish-nuget@v2
+        with:
+          PROJECT_FILE_PATH: BlockBasedMemoryStream/BlockBasedMemoryStream.csproj
+          VERSION_STATIC: $NBGV_SemVer2
+          NUGET_KEY: ${{secrets.NUGET_API_KEY}}
