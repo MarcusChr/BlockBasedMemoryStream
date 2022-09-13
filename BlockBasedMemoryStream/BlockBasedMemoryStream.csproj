@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/MarcusChr/BlockBasedMemoryStream</PackageProjectUrl>
     <RepositoryUrl>https://github.com/MarcusChr/BlockBasedMemoryStream</RepositoryUrl>
     <Description>High-speed FIFO Memory Stream based on fixed-sized memory blocks linked together.</Description>
