@@ -12,8 +12,8 @@ jobs:
         id: nbgv
         with:
           setAllVars: true
-      - run: echo "Version=${{ steps.nbgv.outputs.Version }}"
+      - run: echo "Version=${{ steps.nbgv.outputs.SimpleVersion }}"
       - name: Pack
-        run: dotnet pack ./BlockBasedMemoryStream/BlockBasedMemoryStream.csproj -o . -c Release /p:Version=${{ steps.nbgv.outputs.Version }}
+        run: dotnet pack ./BlockBasedMemoryStream/BlockBasedMemoryStream.csproj -o . -c Release /p:Version=${{ steps.nbgv.outputs.SimpleVersion }}
       - name: Push
         run: dotnet nuget push *.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
