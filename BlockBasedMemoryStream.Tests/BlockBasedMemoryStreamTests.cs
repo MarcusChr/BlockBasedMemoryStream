@@ -1,36 +1,32 @@
-using NUnit.Framework;
 using System;
 using System.IO;
+using Xunit;
 
-namespace com.marcuslc.BlockBasedMemoryStream.Tests
+namespace BlockBasedMemoryStream.Tests
 {
-    public class Tests
+    public class BlockBasedMemoryStreamTests
     {
-        private Random _sharedRandom;
+        private readonly Random _sharedRandom = new Random();
 
-        [OneTimeSetUp]
-        public void OneTimeSetup()
-        {
-            _sharedRandom = new Random();
-        }
-
-        [Test]
-        public void Write_numberOfBytes_lengthIsSameAsWritten([Values] bool isUsingValueCaching, [Values(0, 8)] int poolSize, [Values(64, ushort.MaxValue * 8)] int numberOfBytesToWrite)
+        [Theory]
+        [ClassData(typeof(BlockDataTest))]
+        public void Write_numberOfBytes_lengthIsSameAsWritten(bool isUsingValueCaching, int poolSize, int numberOfBytesToWrite)
         {
             //Arrange
             var memoryBasedMemoryStream = new BlockBasedMemoryStream(isUsingValueCaching, poolSize);
-            byte[] bytesToWrite = new byte[numberOfBytesToWrite];
+            var bytesToWrite = new byte[numberOfBytesToWrite];
             _sharedRandom.NextBytes(bytesToWrite);
 
             //Act
             memoryBasedMemoryStream.Write(bytesToWrite, 0, bytesToWrite.Length);
 
             //Assert
-            Assert.That(memoryBasedMemoryStream.Length, Is.EqualTo(numberOfBytesToWrite));
+            Assert.Equal(numberOfBytesToWrite, memoryBasedMemoryStream.Length);
         }
 
-        [Test]
-        public void Write_WriteBytesMultipleTimes_DataEqualsDataWritten([Values] bool isUsingValueCaching, [Values(0, 8)] int poolSize, [Values(64, ushort.MaxValue * 8)] int numberOfBytesToWrite)
+        [Theory]
+        [ClassData(typeof(BlockDataTest))]
+        public void Write_WriteBytesMultipleTimes_DataEqualsDataWritten(bool isUsingValueCaching, int poolSize, int numberOfBytesToWrite)
         {
             //Arrange
             var numberOfRuns = 4;
@@ -51,18 +47,19 @@ namespace com.marcuslc.BlockBasedMemoryStream.Tests
             for (int i = 0; i < bytesToWrite.Length; i++)
             {
                 memoryBasedMemoryStream.Write(bytesToWrite[i], 0, bytesToWrite[i].Length);
-                memoryBasedMemoryStream.Read(bytesRead[i]);
+                memoryBasedMemoryStream.Read(bytesRead[i], 0, bytesRead[i].Length);
             }
 
             //Assert
             for (int i = 0; i < bytesToWrite.Length; i++)
             {
-                Assert.That(bytesRead[i], Is.EquivalentTo(bytesToWrite[i]));
+                Assert.Equal(bytesToWrite[i], bytesRead[i]);
             }
         }
 
-        [Test]
-        public void Read_WriteBytes_DataEqualsDataWritten([Values] bool isUsingValueCaching, [Values(0, 8)] int poolSize, [Values(64, ushort.MaxValue * 8)] int numberOfBytesToWrite)
+        [Theory]
+        [ClassData(typeof(BlockDataTest))]
+        public void Read_WriteBytes_DataEqualsDataWritten(bool isUsingValueCaching, int poolSize, int numberOfBytesToWrite)
         {
             //Arrange
             var memoryBasedMemoryStream = new BlockBasedMemoryStream(isUsingValueCaching, poolSize);
@@ -72,14 +69,15 @@ namespace com.marcuslc.BlockBasedMemoryStream.Tests
 
             //Act
             memoryBasedMemoryStream.Write(bytesToWrite, 0, bytesToWrite.Length);
-            memoryBasedMemoryStream.Read(bytesRead);
+            memoryBasedMemoryStream.Read(bytesRead, 0, bytesRead.Length);
 
             //Assert
-            Assert.That(bytesRead, Is.EquivalentTo(bytesToWrite));
+            Assert.Equal(bytesToWrite, bytesRead);
         }
 
-        [Test]
-        public void ToArray_WriteBytes_ToArrayEqualsDataWritten([Values] bool isUsingValueCaching, [Values(0, 8)] int poolSize, [Values(64, ushort.MaxValue * 8)] int numberOfBytesToWrite)
+        [Theory]
+        [ClassData(typeof(BlockDataTest))]
+        public void ToArray_WriteBytes_ToArrayEqualsDataWritten(bool isUsingValueCaching, int poolSize, int numberOfBytesToWrite)
         {
             //Arrange
             var memoryBasedMemoryStream = new BlockBasedMemoryStream(isUsingValueCaching, poolSize);
@@ -91,11 +89,12 @@ namespace com.marcuslc.BlockBasedMemoryStream.Tests
             byte[] bytesRead = memoryBasedMemoryStream.ToArray();
 
             //Assert
-            Assert.That(bytesRead, Is.EquivalentTo(bytesToWrite));
+            Assert.Equal(bytesToWrite, bytesRead);
         }
 
-        [Test]
-        public void Clear_WriteBytesThenClear_LengthEqualsZero([Values] bool isUsingValueCaching, [Values(0, 8)] int poolSize, [Values(64, ushort.MaxValue * 8)] int numberOfBytesToWrite)
+        [Theory]
+        [ClassData(typeof(BlockDataTest))]
+        public void Clear_WriteBytesThenClear_LengthEqualsZero(bool isUsingValueCaching, int poolSize, int numberOfBytesToWrite)
         {
             //Arrange
             var memoryBasedMemoryStream = new BlockBasedMemoryStream(isUsingValueCaching, poolSize);
@@ -107,11 +106,12 @@ namespace com.marcuslc.BlockBasedMemoryStream.Tests
             memoryBasedMemoryStream.Clear();
 
             //Assert
-            Assert.That(memoryBasedMemoryStream.Length, Is.EqualTo(0));
+            Assert.Equal(0, memoryBasedMemoryStream.Length);
         }
 
-        [Test]
-        public void CopyTo_WriteDataThenCopyToNormalMemoryStream_TargetMemoryStreamEqualsWrittenData([Values] bool isUsingValueCaching, [Values(0, 8)] int poolSize, [Values(64, ushort.MaxValue * 8)] int numberOfBytesToWrite)
+        [Theory]
+        [ClassData(typeof(BlockDataTest))]
+        public void CopyTo_WriteDataThenCopyToNormalMemoryStream_TargetMemoryStreamEqualsWrittenData(bool isUsingValueCaching, int poolSize, int numberOfBytesToWrite)
         {
             //Arrange
             var memoryBasedMemoryStream = new BlockBasedMemoryStream(isUsingValueCaching, poolSize);
@@ -126,11 +126,12 @@ namespace com.marcuslc.BlockBasedMemoryStream.Tests
             memoryBasedMemoryStream.CopyTo(targetMemoryStream);
 
             //Assert
-            Assert.That(targetMemoryStream.ToArray(), Is.EquivalentTo(bytesToWrite));
+            Assert.Equal(bytesToWrite, targetMemoryStream.ToArray());
         }
 
-        [Test]
-        public void SetLength_WritesBytesThenSetsLength_LengthEqualsTheSetLength([Values] bool isUsingValueCaching, [Values(0, 8)] int poolSize, [Values(64, ushort.MaxValue * 8)] int numberOfBytesToWrite)
+        [Theory]
+        [ClassData(typeof(BlockDataTest))]
+        public void SetLength_WritesBytesThenSetsLength_LengthEqualsTheSetLength(bool isUsingValueCaching, int poolSize, int numberOfBytesToWrite)
         {
             //Arrange
             var memoryBasedMemoryStream = new BlockBasedMemoryStream(isUsingValueCaching, poolSize);
@@ -145,11 +146,12 @@ namespace com.marcuslc.BlockBasedMemoryStream.Tests
             memoryBasedMemoryStream.SetLength(targetLength);
 
             //Assert
-            Assert.That(memoryBasedMemoryStream.Length, Is.EqualTo(targetLength));
+            Assert.Equal(targetLength, memoryBasedMemoryStream.Length);
         }
 
-        [Test]
-        public void Seek_AttemptsToCallTheSeekMethod_ANotSupportedExceptionIsThrown([Values] bool isUsingValueCaching, [Values(0, 8)] int poolSize)
+        [Theory]
+        [ClassData(typeof(BlockDataTest))]
+        public void Seek_AttemptsToCallTheSeekMethod_ANotSupportedExceptionIsThrown(bool isUsingValueCaching, int poolSize, int numberOfBytesToWrite)
         {
             //Arrange
             var memoryBasedMemoryStream = new BlockBasedMemoryStream(isUsingValueCaching, poolSize);
@@ -158,11 +160,12 @@ namespace com.marcuslc.BlockBasedMemoryStream.Tests
             var exceptionThrown = Assert.Throws<NotSupportedException>(() => memoryBasedMemoryStream.Seek(0, SeekOrigin.Begin));
 
             //Assert
-            Assert.That(exceptionThrown, Is.Not.Null);
+            Assert.NotNull(exceptionThrown);
         }
 
-        [Test] //Another exception should be thrown. NullReferenceException is thrown because 'Dispose()' sets an internal field variable to null, which is then accessed when trying to write to the stream.
-        public void Dispose_AttempsToWriteAfterDisposingStream_AnExceptionIsThrown([Values] bool isUsingValueCaching, [Values(0, 8)] int poolSize, [Values(64, ushort.MaxValue * 8)] int numberOfBytesToWrite)
+        [Theory]
+        [ClassData(typeof(BlockDataTest))]
+        public void Dispose_AttempsToWriteAfterDisposingStream_AnExceptionIsThrown(bool isUsingValueCaching, int poolSize, int numberOfBytesToWrite)
         {
             //Arrange
             var memoryBasedMemoryStream = new BlockBasedMemoryStream(isUsingValueCaching, poolSize);
@@ -170,18 +173,21 @@ namespace com.marcuslc.BlockBasedMemoryStream.Tests
             _sharedRandom.NextBytes(bytesToWrite);
 
             //Act
-            memoryBasedMemoryStream.Write(bytesToWrite);
+            memoryBasedMemoryStream.Write(bytesToWrite, 0, bytesToWrite.Length);
             memoryBasedMemoryStream.Dispose();
-            var exceptionThrown = Assert.Throws<NullReferenceException>(() => memoryBasedMemoryStream.Write(bytesToWrite));
+            var exceptionThrown = Assert.Throws<NullReferenceException>(() => memoryBasedMemoryStream.Write(bytesToWrite, 0, bytesToWrite.Length));
 
             //Assert
-            Assert.That(exceptionThrown, Is.Not.Null);
+            Assert.NotNull(exceptionThrown);
         }
 
-        [Test]
-        public void Skip_WritesBytesSkipsThenReadsTheBytes_TheReadBytesShouldEqualTheBytesReadExcludingTheSkippedBytes([Values] bool isUsingValueCaching, [Values(0, 8)] int poolSize, [Values(64, ushort.MaxValue * 8)] int numberOfBytesToWrite, [Values(16, 32)] int numberOfBytesToSkip)
+        [Theory]
+        [ClassData(typeof(BlockDataTest))]
+        public void Skip_WritesBytesSkipsThenReadsTheBytes_TheReadBytesShouldEqualTheBytesReadExcludingTheSkippedBytes(bool isUsingValueCaching, int poolSize, int numberOfBytesToWrite)
         {
             //Arrange
+            var numberOfBytesToSkip = 64;
+                
             var memoryBasedMemoryStream = new BlockBasedMemoryStream(isUsingValueCaching, poolSize);
             var numberOfExpectedBytes = numberOfBytesToWrite - numberOfBytesToSkip;
 
@@ -198,29 +204,31 @@ namespace com.marcuslc.BlockBasedMemoryStream.Tests
             memoryBasedMemoryStream.Read(bytesRead, 0, bytesRead.Length);
 
             //Assert
-            Assert.That(bytesRead, Is.EquivalentTo(expectedBytes));
+            Assert.Equal(expectedBytes, bytesRead);
         }
 
-        [Test]
-        public void ClearPool_WriteBytesClearPoolThenReadBytesAgain_TheReadBytesShouldEqualTheBytesWritten([Values] bool isUsingValueCaching, [Values(0, 8)] int poolSize, [Values(64, ushort.MaxValue * 8)] int numberOfBytesToWrite)
+        [Theory]
+        [ClassData(typeof(BlockDataTest))]
+        public void ClearPool_WriteBytesClearPoolThenReadBytesAgain_TheReadBytesShouldEqualTheBytesWritten(bool isUsingValueCaching, int poolSize, int numberOfBytesToWrite)
         {
             //Arrange
             var memoryBasedMemoryStream = new BlockBasedMemoryStream(isUsingValueCaching, poolSize);
             byte[] bytesToWrite = new byte[numberOfBytesToWrite];
-            byte[] bytesRead = new byte[numberOfBytesToWrite];
+            byte[] bytesReadBuffer = new byte[numberOfBytesToWrite];
             _sharedRandom.NextBytes(bytesToWrite);
 
             //Act
             memoryBasedMemoryStream.Write(bytesToWrite, 0, bytesToWrite.Length);
             memoryBasedMemoryStream.ClearPool();
-            memoryBasedMemoryStream.Read(bytesRead);
+            memoryBasedMemoryStream.Read(bytesReadBuffer, 0, bytesReadBuffer.Length);
 
             //Assert
-            Assert.That(bytesRead, Is.EquivalentTo(bytesToWrite));
+            Assert.Equal(bytesToWrite, bytesReadBuffer);
         }
 
-        [Test]
-        public void Flush_WriteBytesFlushThenReadBytesAgain_TheReadBytesShouldEqualTheBytesWritten([Values] bool isUsingValueCaching, [Values(0, 8)] int poolSize, [Values(64, ushort.MaxValue * 8)] int numberOfBytesToWrite)
+        [Theory]
+        [ClassData(typeof(BlockDataTest))]
+        public void Flush_WriteBytesFlushThenReadBytesAgain_TheReadBytesShouldEqualTheBytesWritten(bool isUsingValueCaching, int poolSize, int numberOfBytesToWrite)
         {
             //Arrange
             var memoryBasedMemoryStream = new BlockBasedMemoryStream(isUsingValueCaching, poolSize);
@@ -231,10 +239,10 @@ namespace com.marcuslc.BlockBasedMemoryStream.Tests
             //Act
             memoryBasedMemoryStream.Write(bytesToWrite, 0, bytesToWrite.Length);
             memoryBasedMemoryStream.Flush();
-            memoryBasedMemoryStream.Read(bytesRead);
+            memoryBasedMemoryStream.Read(bytesRead, 0, bytesRead.Length);
 
             //Assert
-            Assert.That(bytesRead, Is.EquivalentTo(bytesToWrite));
+            Assert.Equal(bytesToWrite, bytesRead);
         }
     }
 }

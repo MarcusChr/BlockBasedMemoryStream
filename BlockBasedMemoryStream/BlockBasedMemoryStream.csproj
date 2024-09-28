@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <PackageProjectUrl>https://github.com/MarcusChr/BlockBasedMemoryStream</PackageProjectUrl>
     <RepositoryUrl>https://github.com/MarcusChr/BlockBasedMemoryStream</RepositoryUrl>
     <Description>High-speed FIFO Memory Stream based on fixed-sized memory blocks linked together.</Description>

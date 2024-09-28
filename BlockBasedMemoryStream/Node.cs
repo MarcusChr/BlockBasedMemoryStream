@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace com.marcuslc.BlockBasedMemoryStream
+namespace BlockBasedMemoryStream
 {
-    public unsafe class Node
+    internal unsafe class Node
     {
         public Node Next;
-        public ValueHolder Value;
+        public ValueBlock Value;
 
         public Node(int bufferSize)
         {
             Next = null;
-            Value = new ValueHolder
+            Value = new ValueBlock
             {
                 start = 0,
                 pointer = Marshal.AllocHGlobal(bufferSize).ToPointer(),
@@ -24,12 +24,5 @@ namespace com.marcuslc.BlockBasedMemoryStream
         {
             Marshal.FreeHGlobal(new IntPtr(Value.pointer));
         }
-    }
-
-    public unsafe struct ValueHolder
-    {
-        public int start;
-        public void* pointer;
-        public int end;
     }
 }
