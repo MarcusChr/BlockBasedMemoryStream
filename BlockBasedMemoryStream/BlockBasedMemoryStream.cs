@@ -40,8 +40,8 @@ namespace BlockBasedMemoryStream
         /// <para/>
         /// The default buffer-size is 65535 bytes (2^16 - 1).
         /// </summary>
-        /// <param name="useLengthCaching">Whether or not to use cached length. Using cached length is on by default and is faster.</param>
-        /// <param name="poolSize">The size of the pool of blocks to reuse once once released. Using a higher pool size can increase performance, but at the cost of increased memory consumption.</param>
+        /// <param name="useLengthCaching">Whether to use cached length. Using cached length is on by default and is faster.</param>
+        /// <param name="poolSize">The size of the pool of blocks to reuse once released. Using a higher pool size can increase performance, but at the cost of increased memory consumption.</param>
         public BlockBasedMemoryStream(bool useLengthCaching = true, int poolSize = 0)
         {
             InternalInit(ushort.MaxValue, useLengthCaching, poolSize);
@@ -51,7 +51,7 @@ namespace BlockBasedMemoryStream
         /// Creates a memory stream based on a linked list with custom fixed size buffers.
         /// </summary>
         /// <param name="blockSize">Custom size of the buffers. The bigger the buffer-size is, the faster it is to add, although more memory will be wasted.</param>
-        /// <param name="useLengthCaching">Whether or not to use cached length. Using cached length is on by default and is faster.</param>
+        /// <param name="useLengthCaching">Whether to use cached length. Using cached length is on by default and is faster.</param>
         /// <param name="poolSize">The size of the pool of blocks to reuse once released. Using a higher pool size can increase performance, but at the cost of increased memory consumption.</param>
         public BlockBasedMemoryStream(int blockSize, bool useLengthCaching = true, int poolSize = 0)
         {
@@ -168,7 +168,7 @@ namespace BlockBasedMemoryStream
         }
 
         /// <summary>
-        /// Clears the pool of reuseable blocks. This method is useful for when You are done reading from the Stream, but want to keep the instance alive. 
+        /// Clears the pool of reusable blocks. This method is useful for when You are done reading from the Stream, but want to keep the instance alive. 
         /// <para/><b>Note:</b> Calling this method will not prevent you from reading/writing in the future, it will just clear the current pool.
         /// </summary>
         public void ClearPool()
@@ -199,7 +199,7 @@ namespace BlockBasedMemoryStream
         /// <summary>
         /// Returns a byte array with the content of the stream.
         /// </summary>
-        /// <param name="removeReadData">Whether or not to remove the returned data from the inner-stream. Default is false.</param>
+        /// <param name="removeReadData">Whether to remove the returned data from the inner-stream. Default is false.</param>
         /// <returns></returns>
         public byte[] ToArray(bool removeReadData)
         {
